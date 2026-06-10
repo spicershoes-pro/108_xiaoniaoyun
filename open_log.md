@@ -33,9 +33,8 @@
 ## 2026-06-10 · Git 初始化（待推送 GitHub）
 
 - **本地**：已 `git init` 并完成首次提交 `ea27a13`（215 文件）
-- **远程**：`https://github.com/spicershoes/108_xiaoniaoyun.git`（与同组织 102/117 一致）
-- **状态**：远程仓库尚未创建 / 本机 `gh` 未登录，**push 未完成**
-- **下一步**：GitHub 创建空仓库后执行 `git push -u origin main`（见 README 或下方命令）
+- **远程**：https://github.com/spicershoes-pro/108_xiaoniaoyun
+- **状态**：已 push `main`（72bcb33）
 
 ---
 
