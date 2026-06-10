@@ -1,0 +1,79 @@
+# ============================================================
+# 霄鸟云 · Git 忽略规则
+# 核心原则：密钥绝不提交，配置模板可提交
+# ============================================================
+
+# ── 环境变量（含密钥，严禁提交） ────────────────────────────
+backend/.env
+backend/config/env/.env.staging
+deploy/.env.prod
+deploy/.env.dev
+deploy/baota/backend.env.production
+108_xiaoniaoyun-baota-prod.tar.gz
+dist-baota-prod/
+backend/config/env/.env.production
+
+# .env.development 和 .env.testing 允许提交（无真实密钥）
+# backend/config/env/.env.development  ← 可提交
+# backend/config/env/.env.testing      ← 可提交
+# backend/.env.example                 ← 可提交（模板）
+
+# ── 依赖包 ───────────────────────────────────────────────────
+frontend/buyer/node_modules/
+frontend/merchant/node_modules/
+frontend/admin/node_modules/
+
+# ── 构建产物 ─────────────────────────────────────────────────
+frontend/buyer/dist/
+frontend/merchant/dist/
+frontend/admin/dist/
+
+# ── 前端本地 .env（由 env/ 目录下文件拷贝产生） ─────────────
+frontend/buyer/.env.local
+frontend/buyer/.env.staging
+frontend/buyer/.env.production
+frontend/merchant/.env.local
+frontend/merchant/.env.staging
+frontend/merchant/.env.production
+frontend/admin/.env.local
+frontend/admin/.env.staging
+frontend/admin/.env.production
+
+# ── 上传文件 ─────────────────────────────────────────────────
+backend/public/uploads/
+
+# ── 日志 ─────────────────────────────────────────────────────
+*.log
+.logs/
+logs/
+backend/storage/logs/
+
+# ── 系统文件 ─────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+
+# ── IDE ──────────────────────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# ── 测试产物 ─────────────────────────────────────────────────
+coverage/
+.phpunit.result.cache
+
+# ── 临时文件 ─────────────────────────────────────────────────
+*.tmp
+*.temp
+/tmp/
+
+# ── Docker ────────────────────────────────────────────────────
+.env.docker
+docker-compose.override.yml
+docker/mysql/data/

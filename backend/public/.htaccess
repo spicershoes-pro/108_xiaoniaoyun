@@ -1,0 +1,9 @@
+Options -MultiViews -Indexes
+RewriteEngine On
+
+# 静态文件直接访问
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# 所有请求转发到 index.php
+RewriteRule ^ index.php [L]

@@ -1,0 +1,10 @@
+# Pre-built frontend (no Node pull): copy dist/ into nginx
+FROM nginx:1.27-alpine
+
+ARG APP=buyer
+ENV APP=${APP}
+
+COPY frontend/${APP}/dist /usr/share/nginx/html
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

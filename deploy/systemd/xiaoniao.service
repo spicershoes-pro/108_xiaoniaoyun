@@ -1,0 +1,41 @@
+[Unit]
+Description=霄鸟云生产服务（Docker Compose）
+Documentation=https://github.com/your-org/xiaoniao-php
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+
+# 环境变量文件（生产密钥存放位置）
+EnvironmentFile=/opt/xiaoniao/config/prod.env
+
+WorkingDirectory=/opt/xiaoniao
+
+# 启动：等待 Docker 就绪后启动所有容器
+ExecStartPre=/usr/bin/docker compose -f /opt/xiaoniao/docker-compose.prod.yml config -q
+ExecStart=/usr/bin/docker compose -f /opt/xiaoniao/docker-compose.prod.yml up -d --remove-orphans
+
+# 停止：优雅停止所有容器（30秒超时）
+ExecStop=/usr/bin/docker compose -f /opt/xiaoniao/docker-compose.prod.yml down --timeout 30
+
+# 重载：滚动更新
+ExecReload=/usr/bin/docker compose -f /opt/xiaoniao/docker-compose.prod.yml up -d --remove-orphans
+
+# 超时
+TimeoutStartSec=300
+TimeoutStopSec=60
+
+# 失败重启策略
+Restart=on-failure
+RestartSec=30s
+
+# 日志
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=xiaoniao
+
+[Install]
+WantedBy=multi-user.target

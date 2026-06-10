@@ -1,0 +1,35 @@
+# 108_xiaoniaoyun prod DB (MM-V3-CORE-01, host port 3320)
+name: 108_xiaoniaoyun-db
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: 108_xiaoniaoyun-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE:      ${DB_NAME:-xiaoniao}
+      TZ:                    Asia/Shanghai
+    ports:
+      - "3320:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/custom.cnf:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 40s
+    networks:
+      - db
+
+networks:
+  db:
+    name: 108_xiaoniaoyun-db-net
+    driver: bridge
+
+volumes:
+  db-data:
+    # Keep legacy volume name so prod data is preserved across compose renames
+    name: xiaoniao-prod-db-data

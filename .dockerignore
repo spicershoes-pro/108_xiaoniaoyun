@@ -1,0 +1,8 @@
+.git
+**/node_modules
+doc
+*.md
+.env
+deploy/.env.prod
+scripts
+terminals

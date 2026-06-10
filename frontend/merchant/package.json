@@ -1,0 +1,20 @@
+{
+  "name": "xiaoniao-merchant",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev":   "vite --port 5174",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.4.27",
+    "vue-router": "^4.3.2",
+    "pinia": "^2.1.7",
+    "axios": "^1.7.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.5",
+    "vite": "^5.3.1"
+  }
+}

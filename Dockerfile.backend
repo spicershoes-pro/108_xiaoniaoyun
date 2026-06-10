@@ -1,0 +1,79 @@
+# ============================================================
+# 霄鸟云 · 后端 Dockerfile
+# 镜像：xiaoniao/backend
+# 运行时：PHP 8.2 + PHP-FPM
+# 构建策略：单阶段（PHP无需编译前端资源，直接复制源码即可）
+# ============================================================
+
+FROM php:8.2-fpm-alpine
+
+LABEL maintainer="xiaoniao-dev" \
+      description="霄鸟云后端 PHP-FPM 服务" \
+      version="1.0.0"
+
+# ── 时区 & 编码 ───────────────────────────────────────────────
+ENV TZ=Asia/Shanghai \
+    LANG=C.UTF-8
+
+# ── 系统依赖 & PHP扩展 ────────────────────────────────────────
+RUN apk update && apk add --no-cache \
+    # 系统工具
+    tzdata \
+    curl \
+    bash \
+    mariadb-client \
+    # 编译依赖（仅构建期需要，COPY后可保留Alpine精简）
+    libzip-dev \
+    oniguruma-dev \
+    && \
+    # 设置时区
+    cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+    echo "Asia/Shanghai" > /etc/timezone && \
+    # 安装PHP扩展
+    docker-php-ext-install \
+        pdo \
+        pdo_mysql \
+        mbstring \
+        opcache \
+        zip \
+    && \
+    # 清理构建缓存（减小镜像体积）
+    docker-php-ext-clean 2>/dev/null || true && \
+    rm -rf /var/cache/apk/* /tmp/*
+
+# ── OPcache 配置（生产性能优化） ─────────────────────────────
+COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+
+# ── PHP-FPM 配置 ─────────────────────────────────────────────
+COPY docker/php/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
+COPY docker/php/php.ini      /usr/local/etc/php/conf.d/custom.ini
+
+# ── 工作目录 ─────────────────────────────────────────────────
+WORKDIR /var/www/html
+
+# ── 复制后端代码 ─────────────────────────────────────────────
+# 先复制依赖相对稳定的配置，利用 Docker 层缓存
+COPY backend/config/       ./config/
+COPY backend/routes/       ./routes/
+COPY backend/app/          ./app/
+COPY backend/public/       ./public/
+COPY database/             ./database/
+
+# ── 上传目录（运行时写入，不提交代码） ───────────────────────
+RUN mkdir -p /var/www/html/public/uploads \
+             /var/www/logs \
+    && chown -R www-data:www-data /var/www/html /var/www/logs \
+    && chmod -R 755 /var/www/html/public/uploads
+
+# ── 容器入口脚本 ─────────────────────────────────────────────
+COPY docker/scripts/backend-entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# ── 健康检查 ─────────────────────────────────────────────────
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD php-fpm -t 2>/dev/null || exit 1
+
+EXPOSE 9000
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["php-fpm"]

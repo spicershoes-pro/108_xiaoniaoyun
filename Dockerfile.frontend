@@ -1,0 +1,68 @@
+# ============================================================
+# 霄鸟云 · 前端 Dockerfile（通用，支持 buyer/merchant/admin）
+# 镜像：xiaoniao/frontend-{buyer,merchant,admin}
+# 构建策略：多阶段（Stage1: Node.js 构建 → Stage2: Nginx 服务）
+# 使用方式：
+#   docker build --build-arg APP=buyer -f Dockerfile.frontend -t xiaoniao/frontend-buyer .
+#   docker build --build-arg APP=merchant -f Dockerfile.frontend -t xiaoniao/frontend-merchant .
+#   docker build --build-arg APP=admin -f Dockerfile.frontend -t xiaoniao/frontend-admin .
+# ============================================================
+
+# ── Stage 1: 构建 ─────────────────────────────────────────────
+FROM node:20-alpine AS builder
+
+ARG APP=buyer
+ENV APP=${APP}
+
+LABEL stage="builder" app="${APP}"
+
+WORKDIR /build
+
+# 先单独复制 package.json，利用 Docker 层缓存
+# 只有依赖变化才重新 npm install，代码变化不会触发重装
+COPY frontend/${APP}/package.json ./package.json
+
+# 安装依赖（ci 模式更精确，生产推荐）
+RUN npm ci --prefer-offline || npm install
+
+# 复制应用源码
+COPY frontend/${APP}/ ./
+
+# 构建（生产模式）
+RUN npm run build
+
+# ── Stage 2: Nginx 服务 ───────────────────────────────────────
+FROM nginx:1.25-alpine AS runtime
+
+ARG APP=buyer
+ARG PORT=80
+ENV APP=${APP} \
+    PORT=${PORT} \
+    TZ=Asia/Shanghai
+
+LABEL maintainer="xiaoniao-dev" \
+      description="霄鸟云前端 ${APP} 静态服务" \
+      version="1.0.0"
+
+# 时区
+RUN apk add --no-cache tzdata && \
+    cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+    echo "Asia/Shanghai" > /etc/timezone && \
+    rm -rf /var/cache/apk/*
+
+# 从构建阶段复制编译产物
+COPY --from=builder /build/dist /usr/share/nginx/html
+
+# Nginx 配置（由 docker-compose 通过 volume 挂载，这里提供默认配置）
+COPY docker/nginx/conf.d/frontend.conf /etc/nginx/conf.d/default.conf
+
+# 移除默认配置防止冲突
+RUN rm -f /etc/nginx/conf.d/default.conf.bak 2>/dev/null || true
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD wget -q --spider http://localhost:${PORT}/index.html || exit 1
+
+EXPOSE ${PORT}
+
+CMD ["nginx", "-g", "daemon off;"]
